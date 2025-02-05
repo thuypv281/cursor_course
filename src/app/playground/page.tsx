@@ -49,6 +49,7 @@ export default function Playground() {
         title: 'Error!',
         message: 'Failed to verify API key'
       });
+      console.error(error);
     } finally {
       setIsVerifying(false);
     }

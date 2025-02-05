@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { apiKeyService, ApiKey } from '../lib/api-service';
 import Toast, { Toast as ToastType } from '@/app/components/Toast';
-import Sidebar from '@/app/components/Sidebar';
-import Link from 'next/link';
 
 const generateApiKey = () => {
   const prefix = 'tvly-';
@@ -23,10 +21,8 @@ export default function Dashboard() {
   const [newKeyName, setNewKeyName] = useState('');
   const [newKeyUsage, setNewKeyUsage] = useState<number>(1000);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
-  const [showCopyTooltip, setShowCopyTooltip] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showKeys, setShowKeys] = useState<Set<string>>(new Set());
+  const [showCopyTooltip, setShowCopyTooltip] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastType[]>([]);
 
   useEffect(() => {
@@ -35,20 +31,25 @@ export default function Dashboard() {
 
   const fetchApiKeys = async () => {
     try {
-      setIsLoading(true);
       const data = await apiKeyService.fetchApiKeys();
       setApiKeys(data);
     } catch (err) {
-      setError('Failed to fetch API keys');
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to fetch API keys'
+      });
       console.error(err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
-      setError('Key name is required');
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Key name is required'
+      });
       return;
     }
     
@@ -73,7 +74,11 @@ export default function Dashboard() {
       
     } catch (err) {
       console.error('Error creating key:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create API key');
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: err instanceof Error ? err.message : 'Failed to create API key'
+      });
     }
   };
 
@@ -92,7 +97,11 @@ export default function Dashboard() {
       });
       
     } catch (err) {
-      setError('Failed to update API key');
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to update API key'
+      });
       console.error(err);
     }
   };
@@ -109,7 +118,11 @@ export default function Dashboard() {
       });
       
     } catch (err) {
-      setError('Failed to delete API key');
+      addToast({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to delete API key'
+      });
       console.error(err);
     }
   };
@@ -134,6 +147,8 @@ export default function Dashboard() {
   const handleCopyKey = async (value: string, id: string) => {
     try {
       await navigator.clipboard.writeText(value);
+      setShowCopyTooltip(id);
+      setTimeout(() => setShowCopyTooltip(null), 2000);
       addToast({
         type: 'success',
         title: 'Congratulations!',
@@ -145,6 +160,7 @@ export default function Dashboard() {
         title: 'Oh no!',
         message: 'Failed to copy API key.'
       });
+      console.error(err);
     }
   };
 
